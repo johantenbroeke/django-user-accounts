@@ -628,6 +628,10 @@ class PasswordResetView(FormView):
         email_qs = EmailAddress.objects.filter(email__iexact=email)
         for user in User.objects.filter(pk__in=email_qs.values("user")):
             uid = int_to_base36(user.id)
+            try:
+                uid = int_to_base36(user.id)
+            except TypeError as e:
+                uid = str(user.id)
             token = self.make_token(user)
             password_reset_url = "{0}://{1}{2}".format(
                 protocol,
@@ -704,9 +708,16 @@ class PasswordResetTokenView(PasswordMixin, FormView):
             uid_int = base36_to_int(self.kwargs["uidb36"])
         except ValueError:
             raise Http404()
-        return get_object_or_404(get_user_model(), id=uid_int)
+
+        try:
+            return get_object_or_404(get_user_model(), id=uid_int)
+        except:
+            _tok = self.kwargs["uidb36"] + "-" + self.kwargs["token"]
+            str_uid = _tok[:36]
+            return get_object_or_404(get_user_model(), id=str_uid)
 
     def check_token(self, user, token):
+        t = "-".join(token.split("-")[-2:])
         return self.token_generator.check_token(user, token)
 
     def token_fail(self):
