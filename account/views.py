@@ -718,7 +718,7 @@ class PasswordResetTokenView(PasswordMixin, FormView):
 
     def check_token(self, user, token):
         t = "-".join(token.split("-")[-2:])
-        return self.token_generator.check_token(user, token)
+        return self.token_generator.check_token(user, t)
 
     def token_fail(self):
         response_kwargs = {
